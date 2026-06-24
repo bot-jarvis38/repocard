@@ -3,12 +3,31 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RepoCard — Turn any GitHub repo into a share-worthy card</title>
+<title>RepoCard — Turn any GitHub repo into a share-worthy card & PNG</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236366f1'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='white'%3E%E2%97%86%3C/text%3E%3C/svg%3E" />
-<meta name="description" content="Paste a GitHub repo URL and get a clean, share-worthy project card you can download as a PNG. Free, no login." />
-<meta property="og:title" content="RepoCard — Turn any GitHub repo into a share-worthy card" />
-<meta property="og:description" content="Paste a GitHub repo URL and get a clean, share-worthy project card you can download as a PNG." />
+<meta name="description" content="RepoCard turns any GitHub repo URL into a clean, share-worthy project card and downloadable PNG share image — stars, forks, language and all. Free, no login." />
+<link rel="canonical" href="https://repocard-delta.vercel.app" />
+
+<!-- Open Graph -->
 <meta property="og:type" content="website" />
+<meta property="og:site_name" content="RepoCard" />
+<meta property="og:title" content="RepoCard — Turn any GitHub repo into a share-worthy card" />
+<meta property="og:description" content="Paste a GitHub repo URL and get a clean, share-worthy project card you can download as a PNG share image. Free, no login." />
+<meta property="og:url" content="https://repocard-delta.vercel.app" />
+<meta property="og:image" content="https://repocard-delta.vercel.app/og.png" />
+<meta property="og:image:secure_url" content="https://repocard-delta.vercel.app/og.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="RepoCard — turn any GitHub repo into a share-worthy card" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="RepoCard — Turn any GitHub repo into a share-worthy card" />
+<meta name="twitter:description" content="Paste a GitHub repo URL and get a clean, share-worthy project card you can download as a PNG share image. Free, no login." />
+<meta name="twitter:image" content="https://repocard-delta.vercel.app/og.png" />
+<meta name="twitter:image:alt" content="RepoCard — turn any GitHub repo into a share-worthy card" />
+
 <link rel="preconnect" href="https://api.github.com" />
 <style>
   :root {
@@ -155,6 +174,8 @@
 
     <div class="actions">
       <button class="btn-ghost" id="dlBtn">⬇ Download PNG</button>
+      <button class="btn-ghost" id="shareXBtn" title="Share RepoCard on X">𝕏 Share on X</button>
+      <button class="btn-ghost" id="copyBtn" title="Copy link to RepoCard">🔗 Copy link</button>
     </div>
 
     <div class="capture">
@@ -309,9 +330,43 @@
       }
     }
 
+    const SITE_URL = "https://repocard-delta.vercel.app";
+
+    function shareOnX() {
+      const text = "Turn any GitHub repo into a share-worthy card 👉";
+      const url = "https://twitter.com/intent/tweet?text=" +
+        encodeURIComponent(text) + "&url=" + encodeURIComponent(SITE_URL);
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    async function copyLink() {
+      const btn = $("copyBtn");
+      const original = btn.textContent;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(SITE_URL);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = SITE_URL;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        btn.textContent = "✓ Copied!";
+      } catch (e) {
+        btn.textContent = "Copy failed";
+      }
+      setTimeout(() => { btn.textContent = original; }, 1800);
+    }
+
     $("genBtn").addEventListener("click", generate);
     $("repoInput").addEventListener("keydown", (e) => { if (e.key === "Enter") generate(); });
     $("dlBtn").addEventListener("click", download);
+    $("shareXBtn").addEventListener("click", shareOnX);
+    $("copyBtn").addEventListener("click", copyLink);
     $("subForm").addEventListener("submit", subscribe);
 
     // Demo on first load
