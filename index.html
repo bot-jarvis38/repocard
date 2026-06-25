@@ -127,6 +127,19 @@
   .capture .cmsg.ok { color: var(--ok); }
   .capture .cmsg.error { color: var(--err); }
 
+  .unlock { max-width: 520px; margin: 18px auto 28px; text-align: center; }
+  .unlock-panel { background: var(--panel-2); border: 1px solid var(--border); border-radius: 16px;
+    padding: 18px 20px; margin-top: 12px; text-align: left; }
+  .unlock-panel p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+  .unlock-panel strong { color: var(--text); }
+  .unlock-panel form { display: flex; gap: 8px; }
+  .unlock-panel input { flex: 1; background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 14px; border-radius: 10px; font-size: 14px; outline: none; }
+  .unlock-panel input:focus { border-color: var(--accent); }
+  .unlock-panel .cmsg { font-size: 13px; min-height: 18px; margin-top: 10px; }
+  .unlock-panel .cmsg.ok { color: var(--ok); }
+  .unlock-panel .cmsg.error { color: var(--err); }
+
   footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 40px; }
   footer a { color: var(--muted); }
 
@@ -176,6 +189,18 @@
       <button class="btn-ghost" id="dlBtn">⬇ Download PNG</button>
       <button class="btn-ghost" id="shareXBtn" title="Share RepoCard on X">𝕏 Share on X</button>
       <button class="btn-ghost" id="copyBtn" title="Copy link to RepoCard">🔗 Copy link</button>
+    </div>
+
+    <div class="unlock">
+      <button class="btn-primary" id="unlockBtn">✨ Remove stamp + premium templates — $7</button>
+      <div class="unlock-panel" id="unlockPanel" hidden>
+        <p>Watermark-free high-res export + premium card templates. <strong>$7 one-time.</strong> Launching this week — drop your email for the early-bird unlock link:</p>
+        <form id="unlockForm">
+          <input id="unlockEmail" type="email" placeholder="you@example.com" required />
+          <button class="btn-primary" type="submit" id="unlockSubmit">Get early-bird unlock</button>
+        </form>
+        <div class="cmsg" id="umsg"></div>
+      </div>
     </div>
 
     <div class="capture">
@@ -362,9 +387,53 @@
       setTimeout(() => { btn.textContent = original; }, 1800);
     }
 
+    function toggleUnlock() {
+      const p = $("unlockPanel");
+      p.hidden = !p.hidden;
+      if (!p.hidden) $("unlockEmail").focus();
+    }
+
+    async function unlockSubmit(ev) {
+      ev.preventDefault();
+      const umsg = $("umsg");
+      const email = $("unlockEmail").value.trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      umsg.className = "cmsg";
+      if (!valid) {
+        umsg.className = "cmsg error";
+        umsg.textContent = "Enter a valid email address.";
+        return;
+      }
+      $("unlockSubmit").disabled = true;
+      umsg.textContent = "Submitting…";
+      try {
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, intent: "paid", repo: $("repoInput").value.trim() })
+        });
+        if (res.ok) {
+          umsg.className = "cmsg ok";
+          umsg.textContent = "You're in. We'll email your early-bird unlock link the moment premium ships.";
+          $("unlockEmail").value = "";
+        } else {
+          const j = await res.json().catch(() => ({}));
+          umsg.className = "cmsg error";
+          umsg.textContent = j.error || "Something went wrong. Try again.";
+        }
+      } catch (e) {
+        umsg.className = "cmsg error";
+        umsg.textContent = "Network error. Try again.";
+      } finally {
+        $("unlockSubmit").disabled = false;
+      }
+    }
+
     $("genBtn").addEventListener("click", generate);
     $("repoInput").addEventListener("keydown", (e) => { if (e.key === "Enter") generate(); });
     $("dlBtn").addEventListener("click", download);
+    $("unlockBtn").addEventListener("click", toggleUnlock);
+    $("unlockForm").addEventListener("submit", unlockSubmit);
     $("shareXBtn").addEventListener("click", shareOnX);
     $("copyBtn").addEventListener("click", copyLink);
     $("subForm").addEventListener("submit", subscribe);

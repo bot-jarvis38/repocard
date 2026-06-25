@@ -26,8 +26,14 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // "paid" = clicked the $7 unlock CTA (willingness-to-pay signal); else a plain notify signup.
+  const intent = (body.intent || "").toString() === "paid" ? "paid" : "notify";
+  const repo = (body.repo || "").toString().slice(0, 200);
+
   const record = {
     email,
+    intent,
+    repo,
     ts: new Date().toISOString(),
     ua: (req.headers["user-agent"] || "").slice(0, 200),
   };
@@ -36,7 +42,8 @@ module.exports = async (req, res) => {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
       const { put } = require("@vercel/blob");
-      const key = "subscribers/" + record.ts.replace(/[:.]/g, "-") + "-" + Math.random().toString(36).slice(2, 8) + ".json";
+      const prefix = intent === "paid" ? "paid-intent/" : "subscribers/";
+      const key = prefix + record.ts.replace(/[:.]/g, "-") + "-" + Math.random().toString(36).slice(2, 8) + ".json";
       await put(key, JSON.stringify(record), {
         access: "public",
         contentType: "application/json",
