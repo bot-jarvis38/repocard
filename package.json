@@ -4,6 +4,6 @@
   "private": true,
   "description": "Turn any GitHub repo into a share-worthy card.",
   "dependencies": {
-    "@vercel/blob": "^0.27.0"
+    "@vercel/blob": "^0.27.3"
   }
 }
