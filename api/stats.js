@@ -2,7 +2,7 @@
 // Blob token resolves). Lets us measure signups/paid-intent headlessly via curl.
 // Returns counts only — never email addresses.
 module.exports = async (req, res) => {
-  const out = { paid_intent: 0, subscribers: 0, total: 0, store: "none" };
+  const out = { paid_intent: 0, subscribers: 0, pageviews: 0, generations: 0, total: 0, store: "none" };
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
       const { list } = require("@vercel/blob");
@@ -15,6 +15,8 @@ module.exports = async (req, res) => {
       } while (cursor);
       out.paid_intent = blobs.filter((b) => b.pathname.startsWith("paid-intent/")).length;
       out.subscribers = blobs.filter((b) => b.pathname.startsWith("subscribers/")).length;
+      out.pageviews = blobs.filter((b) => b.pathname.startsWith("views/pageview")).length;
+      out.generations = blobs.filter((b) => b.pathname.startsWith("views/generate")).length;
       out.total = blobs.length;
       out.store = "blob";
     } catch (e) {

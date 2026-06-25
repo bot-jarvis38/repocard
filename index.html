@@ -232,6 +232,18 @@
     const $ = (id) => document.getElementById(id);
     const msg = $("msg");
 
+    // Fire-and-forget funnel beacon (pageview / card generation). Never blocks UI.
+    function hit(kind, repo) {
+      try {
+        fetch("/api/hit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind, repo: repo || "" }),
+          keepalive: true,
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
     function parseRepo(raw) {
       let s = (raw || "").trim();
       if (!s) return null;
@@ -293,6 +305,7 @@
         const d = await res.json();
         renderCard(d);
         msg.textContent = "";
+        hit("generate", parsed.owner + "/" + parsed.repo);
       } catch (e) {
         msg.className = "msg error";
         msg.textContent = "Network error fetching the repo. Check your connection.";
@@ -444,6 +457,7 @@
       const qp = new URLSearchParams(location.search).get("repo");
       if (qp && parseRepo(qp)) $("repoInput").value = qp;
     } catch (e) {}
+    hit("pageview", "");
     generate();
   </script>
 </body>
