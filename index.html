@@ -369,7 +369,12 @@
     $("copyBtn").addEventListener("click", copyLink);
     $("subForm").addEventListener("submit", subscribe);
 
-    // Demo on first load
+    // Deep-link: ?repo=<url-or-owner/repo> auto-loads that repo's card (used by outreach links).
+    // Falls back to the demo repo when absent.
+    try {
+      const qp = new URLSearchParams(location.search).get("repo");
+      if (qp && parseRepo(qp)) $("repoInput").value = qp;
+    } catch (e) {}
     generate();
   </script>
 </body>
